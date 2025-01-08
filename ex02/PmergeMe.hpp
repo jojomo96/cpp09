@@ -34,7 +34,8 @@ class PmergeMe {
 	static void print(const T &elements);
 
 	template<class T>
-	static void printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd, const T &rest);
+	static void printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd,
+	                        const T &rest);
 
 	template<typename T>
 	static void run(T &elements);
@@ -87,23 +88,30 @@ void PmergeMe::print(const T &elements) {
 }
 
 template<typename T>
-void PmergeMe::printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd, const T &rest) {
+void PmergeMe::printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd,
+                           const T &rest) {
 	std::cout << std::endl;
 	std::cout << "Main chain: ";
 	for (size_t i = 0; i < mainChain.size(); ++i) {
 		mainChain[i]->print(i);
 	}
-	std::cout << " | Pending chain: ";
-	for (size_t i = 0; i < pendingChain.size(); ++i) {
-		pendingChain[i]->print(i);
+
+	if (!pendingChain.empty()) {
+		std::cout << " | Pending chain: ";
+		for (size_t i = 0; i < pendingChain.size(); ++i) {
+			pendingChain[i]->print(i);
+		}
 	}
-	std::cout << " | Odd: ";
 	if (odd) {
+		std::cout << " | Odd: ";
 		odd->print(0);
 	}
-	std::cout << " | Rest: ";
-	for (size_t i = 0; i < rest.size(); ++i) {
-		rest[rest.size() - 1 - i]->print(i);
+
+	if (!rest.empty()) {
+		std::cout << " | Rest: ";
+		for (size_t i = 0; i < rest.size(); ++i) {
+			rest[rest.size() - 1 - i]->print(i);
+		}
 	}
 	std::cout << std::endl;
 }
@@ -119,6 +127,7 @@ template<typename T>
 T PmergeMe::sort(T &elements, T &rest) {
 	if (mergePairs(elements, rest)) {
 		swapPairs(elements);
+		printChains(elements, {}, nullptr, rest);
 		elements = sort(elements, rest);
 	}
 
@@ -149,8 +158,6 @@ bool PmergeMe::mergePairs(T &elements, T &rest) {
 	if (elements.empty()) {
 		return false;
 	}
-
-	std::cout << "Merging elements with depth " << elements[0]->_depth << std::endl;
 
 	T newElements;
 	bool merged = false;

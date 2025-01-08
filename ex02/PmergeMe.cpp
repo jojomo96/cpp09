@@ -47,7 +47,7 @@ void Element::print(const int i) const { // NOLINT(*-no-recursion)
 	static const char* resetColor = "\033[0m";
 
 	if (std::holds_alternative<int>(_data)) {
-		std::cout << std::get<int>(_data) << " ";
+		std::cout << colors[i % colors.size()] << std::get<int>(_data) << resetColor << " ";
 	} else if (std::holds_alternative<Pair>(_data)) {
 		const auto& [first, second] = std::get<Pair>(_data);
 
