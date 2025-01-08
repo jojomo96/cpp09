@@ -88,6 +88,7 @@ void Element::sortElement() {
 		}
 
 		if (first->getMaxValue() > second->getMaxValue()) {
+			// std::cout << "Swapping elements: " << first->getMaxValue() << " and " << second->getMaxValue() << std::endl;
 			std::swap(first, second);
 		}
 	}
