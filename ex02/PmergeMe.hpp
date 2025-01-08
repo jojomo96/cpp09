@@ -40,16 +40,17 @@ class PmergeMe {
 	static void run(T &elements);
 
 	template<typename T>
-	static T sort(T &elements);
+	static T sort(T &elements, T &rest);
 
 	template<typename T>
-	static bool mergePairs(T &elements);
+	static bool mergePairs(T &elements, T &rest);
 
 	template<typename T>
 	static void swapPairs(T &elements);
 
 	template<typename T>
-	static void splitElementsIntoChains(const T &elements, T &mainChain, T &pendingChain, std::shared_ptr<Element> &odd);
+	static void splitElementsIntoChains(const T &elements, T &mainChain, T &pendingChain, std::shared_ptr<Element> &odd,
+	                                    T &rest);
 
 	template<typename T>
 	static void sortElementIntoChain(const std::shared_ptr<Element> &elem, T &mainChain);
@@ -89,11 +90,11 @@ template<typename T>
 void PmergeMe::printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd) {
 	std::cout << std::endl;
 	std::cout << "Main chain: ";
-	for (const auto &elem : mainChain) {
+	for (const auto &elem: mainChain) {
 		elem->print(0);
 	}
 	std::cout << " | Pending chain: ";
-	for (const auto &elem : pendingChain) {
+	for (const auto &elem: pendingChain) {
 		elem->print(0);
 	}
 	std::cout << " | Odd: ";
@@ -106,21 +107,25 @@ void PmergeMe::printChains(const T &mainChain, const T &pendingChain, const std:
 template<typename T>
 void PmergeMe::run(T &elements) {
 	print(elements);
-	sort(elements);
+	T rest = {};
+	sort(elements, rest);
 }
 
 template<typename T>
-T PmergeMe::sort(T &elements) {
-	if (mergePairs(elements)) {
+T PmergeMe::sort(T &elements, T &rest) {
+	if (mergePairs(elements, rest)) {
 		swapPairs(elements);
-		print(elements);
-		elements = sort(elements);
+		elements = sort(elements, rest);
 	}
+
+	std::cout << "Rest: ";
+	print(rest);
+
 	T mainChain;
 	T pendingChain;
 	std::shared_ptr<Element> odd;
 
-	splitElementsIntoChains(elements, mainChain, pendingChain, odd);
+	splitElementsIntoChains(elements, mainChain, pendingChain, odd, rest);
 
 	printChains(mainChain, pendingChain, odd);
 
@@ -133,30 +138,31 @@ T PmergeMe::sort(T &elements) {
 		sortElementIntoChain(odd, mainChain);
 	}
 
-	std::cout << "Sorted main chain: " ;
+	std::cout << "Sorted main chain: ";
 	print(mainChain);
 	return mainChain;
 }
 
 template<typename T>
-bool PmergeMe::mergePairs(T &elements) {
+bool PmergeMe::mergePairs(T &elements, T &rest) {
 	if (elements.empty()) {
 		return false;
 	}
 
-	int targetDepth = elements[0]->_depth;
-	std::cout << "Merging elements with depth " << targetDepth << std::endl;
+	std::cout << "Merging elements with depth " << elements[0]->_depth << std::endl;
 
 	T newElements;
 	bool merged = false;
 
 	for (size_t i = 0; i < elements.size(); ++i) {
-		if (i + 1 < elements.size() && elements[i]->_depth == targetDepth && elements[i + 1]->_depth == targetDepth) {
+		if (i + 1 < elements.size()) {
 			newElements.push_back(merge(elements[i], elements[i + 1]));
 			++i; // Skip the next element as it has been merged
 			merged = true;
-		} else {
+		} else if (elements.size() == 1) {
 			newElements.push_back(elements[i]);
+		} else {
+			rest.push_back(elements[i]);
 		}
 	}
 
@@ -173,33 +179,31 @@ void PmergeMe::swapPairs(T &elements) {
 
 template<typename T>
 void PmergeMe::splitElementsIntoChains(const T &elements, T &mainChain,
-                                       T &pendingChain, std::shared_ptr<Element> &odd) {
-	int targetDepth = elements[0]->_depth;
+                                       T &pendingChain, std::shared_ptr<Element> &odd, T &rest) {
 	bool isFirstPair = true;
 
 	for (auto &elem: elements) {
-		if (targetDepth == elem->_depth) {
-			if (std::holds_alternative<int>(elem->_data)) {
-				mainChain.push_back(elem);
-			} else {
-				auto &pairRef = std::get<Pair>(elem->_data);
-				auto &left = pairRef.first; // should be the smaller one if swapPairs() was called
-				auto &right = pairRef.second; // should be the bigger one
-
-				if (isFirstPair) {
-					mainChain.push_back(left);
-					mainChain.push_back(right);
-					isFirstPair = false;
-				} else {
-					pendingChain.push_back(left);
-					mainChain.push_back(right);
-				}
-			}
-		} else if (targetDepth - 1 == elem->_depth) {
-			odd = elem;
-		} else {
+		if (std::holds_alternative<int>(elem->_data)) {
 			mainChain.push_back(elem);
+		} else {
+			auto &pairRef = std::get<Pair>(elem->_data);
+			auto &left = pairRef.first; // should be the smaller one if swapPairs() was called
+			auto &right = pairRef.second; // should be the bigger one
+
+			if (isFirstPair) {
+				mainChain.push_back(left);
+				mainChain.push_back(right);
+				isFirstPair = false;
+			} else {
+				pendingChain.push_back(left);
+				mainChain.push_back(right);
+			}
 		}
+	}
+
+	if (!rest.empty() && rest.back()->_depth == mainChain.back()->_depth) {
+		odd = rest.back();
+		rest.pop_back();
 	}
 }
 
