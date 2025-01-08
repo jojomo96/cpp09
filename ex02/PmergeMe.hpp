@@ -34,7 +34,7 @@ class PmergeMe {
 	static void print(const T &elements);
 
 	template<class T>
-	static void printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd);
+	static void printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd, const T &rest);
 
 	template<typename T>
 	static void run(T &elements);
@@ -87,19 +87,23 @@ void PmergeMe::print(const T &elements) {
 }
 
 template<typename T>
-void PmergeMe::printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd) {
+void PmergeMe::printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd, const T &rest) {
 	std::cout << std::endl;
 	std::cout << "Main chain: ";
-	for (const auto &elem: mainChain) {
-		elem->print(0);
+	for (size_t i = 0; i < mainChain.size(); ++i) {
+		mainChain[i]->print(i);
 	}
 	std::cout << " | Pending chain: ";
-	for (const auto &elem: pendingChain) {
-		elem->print(0);
+	for (size_t i = 0; i < pendingChain.size(); ++i) {
+		pendingChain[i]->print(i);
 	}
 	std::cout << " | Odd: ";
 	if (odd) {
 		odd->print(0);
+	}
+	std::cout << " | Rest: ";
+	for (size_t i = 0; i < rest.size(); ++i) {
+		rest[rest.size() - 1 - i]->print(i);
 	}
 	std::cout << std::endl;
 }
@@ -118,16 +122,13 @@ T PmergeMe::sort(T &elements, T &rest) {
 		elements = sort(elements, rest);
 	}
 
-	std::cout << "Rest: ";
-	print(rest);
-
 	T mainChain;
 	T pendingChain;
 	std::shared_ptr<Element> odd;
 
 	splitElementsIntoChains(elements, mainChain, pendingChain, odd, rest);
 
-	printChains(mainChain, pendingChain, odd);
+	printChains(mainChain, pendingChain, odd, rest);
 
 	if (!pendingChain.empty()) {
 		for (auto &elem: pendingChain) {
@@ -210,7 +211,7 @@ void PmergeMe::splitElementsIntoChains(const T &elements, T &mainChain,
 template<typename T>
 void PmergeMe::sortElementIntoChain(const std::shared_ptr<Element> &elem, T &mainChain) {
 	auto it = mainChain.begin();
-	while (it != mainChain.end() && (*it)->getMaxValue() < elem->getMaxValue() && (*it)->_depth >= elem->_depth) {
+	while (it != mainChain.end() && (*it)->getMaxValue() < elem->getMaxValue()) {
 		++it;
 	}
 	mainChain.insert(it, elem);
