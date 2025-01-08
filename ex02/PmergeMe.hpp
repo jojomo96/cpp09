@@ -75,6 +75,8 @@ public:
 	static int runVector(const std::vector<int> &input);
 
 	static int runDeque(const std::vector<int> &input);
+
+	static std::vector<size_t> generateJacobsthalIndices(size_t n);
 };
 
 
