@@ -19,6 +19,8 @@ struct Element {
 	[[nodiscard]] int getMaxValue() const;
 
 	void print(int depth = 0) const;
+
+	void sortElement();
 };
 
 std::shared_ptr<Element> makeElement(int data);
@@ -39,7 +41,10 @@ class PmergeMe {
 	static void sort(T& elements);
 
 	template <typename T>
-	static void mergeIntoPairs(T& elements);
+	static bool mergeIntoPairs(T &elements);
+
+	template <typename T>
+	static void swapPairs(T& elements);
 
 public:
 	PmergeMe() = delete;
@@ -71,24 +76,35 @@ template<typename T>
 void PmergeMe::run(T &elements) {
 	print(elements);
 	sort(elements);
-	sort(elements);
-	sort(elements);
-	print(elements);
 }
 
 template<typename T>
 void PmergeMe::sort(T &elements) {
-	mergeIntoPairs(elements);
+	if (mergeIntoPairs(elements)) {
+		swapPairs(elements);
+		print(elements);
+		sort(elements);
+	}
 }
 
 template<typename T>
-void PmergeMe::mergeIntoPairs(T &elements) {
+bool PmergeMe::mergeIntoPairs(T &elements) {
+	bool merged = false;
 	for (size_t i = 0; i < elements.size(); i += 1) {
 		if (i + 1 < elements.size() && elements[i]->_depth == elements[i + 1]->_depth) {
 			elements[i] = merge(elements[i], elements[i + 1]);
 			elements.erase(elements.begin() + i + 1);
+			merged = true;
 		} else {
 			elements[i]->_depth += 2;
 		}
+	}
+	return merged;
+}
+
+template<typename T>
+void PmergeMe::swapPairs(T &elements) {
+	for (const auto& element : elements) {
+		element->sortElement();
 	}
 }

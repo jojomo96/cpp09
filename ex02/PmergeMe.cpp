@@ -69,6 +69,24 @@ std::shared_ptr<Element> merge(const std::shared_ptr<Element> &first, const std:
 	return std::make_shared<Element>(first, second, depth);
 }
 
+void Element::sortElement() {
+	if (std::holds_alternative<int>(_data)) {
+		return;
+	}
+
+	if (std::holds_alternative<Pair>(_data)) {
+		auto& [first, second] = std::get<Pair>(_data);
+
+		if (!first || !second) {
+			throw std::runtime_error("Invalid Pair: Null pointer detected");
+		}
+
+		if (first->getMaxValue() > second->getMaxValue()) {
+			std::swap(first, second);
+		}
+	}
+}
+
 void PmergeMe::runVector(const std::vector<int>& input) {
 	std::vector<std::shared_ptr<Element>> elements;
 	parseInput(elements, input);
