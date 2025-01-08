@@ -19,10 +19,11 @@ int main() {
 
 
 	// Run with vector
-	PmergeMe::runVector(testInput);
+	int run_vector = PmergeMe::runVector(testInput);
 
 	// Run with deque
 	// PmergeMe::runDeque(testInput);
+	std::cout << "Global comparison count: " << run_vector << std::endl;
 
 	return 0;
 }

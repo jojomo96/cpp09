@@ -36,7 +36,7 @@ int Element::getMaxValue() const { // NOLINT(*-no-recursion)
 
 
 void Element::print(const int i) const { // NOLINT(*-no-recursion)
-	static const std::array<const char*, 6> colors = {
+	static constexpr std::array<const char*, 6> colors = {
 		"\033[0;31m", // Red
 		"\033[0;32m", // Green
 		"\033[0;33m", // Yellow
@@ -44,7 +44,7 @@ void Element::print(const int i) const { // NOLINT(*-no-recursion)
 		"\033[0;35m", // Magenta
 		"\033[0;36m"  // Cyan
 	};
-	static const char* resetColor = "\033[0m";
+	static auto resetColor = "\033[0m";
 
 	if (std::holds_alternative<int>(_data)) {
 		std::cout << colors[i % colors.size()] << std::get<int>(_data) << resetColor << " ";
@@ -89,19 +89,26 @@ void Element::sortElement() {
 
 		if (first->getMaxValue() > second->getMaxValue()) {
 			// std::cout << "Swapping elements: " << first->getMaxValue() << " and " << second->getMaxValue() << std::endl;
+			++globalComparisonCount;
 			std::swap(first, second);
 		}
 	}
 }
 
-void PmergeMe::runVector(const std::vector<int>& input) {
+inline int PmergeMe::getGlobalComparisonCount() {
+	return globalComparisonCount;
+}
+
+int PmergeMe::runVector(const std::vector<int>& input) {
 	std::vector<std::shared_ptr<Element>> elements;
 	parseInput(elements, input);
 	run(elements);
+	return globalComparisonCount;
 }
 
-void PmergeMe::runDeque(const std::vector<int>& input) {
+int PmergeMe::runDeque(const std::vector<int> &input) {
 	std::deque<std::shared_ptr<Element>> elements;
 	parseInput(elements, input);
 	run(elements);
+	return globalComparisonCount;
 }

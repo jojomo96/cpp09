@@ -5,6 +5,8 @@
 
 struct Element;
 
+inline int globalComparisonCount = 0;
+
 using Pair = std::pair<std::shared_ptr<Element>, std::shared_ptr<Element> >;
 
 struct Element {
@@ -53,8 +55,9 @@ class PmergeMe {
 	static void splitElementsIntoChains(const T &elements, T &mainChain, T &pendingChain, std::shared_ptr<Element> &odd,
 	                                    T &rest);
 
-	template<typename T>
-	static void sortElementIntoChain(const std::shared_ptr<Element> &elem, T &mainChain);
+	template<class T>
+	static void sortElementIntoChain(const std::shared_ptr<Element> &elem, T &mainChain, typename T::iterator start,
+	                          typename T::iterator end);
 
 public:
 	PmergeMe() = delete;
@@ -67,10 +70,14 @@ public:
 
 	PmergeMe &operator=(PmergeMe &&) = delete;
 
-	static void runVector(const std::vector<int> &input);
+	static int getGlobalComparisonCount();
 
-	static void runDeque(const std::vector<int> &input);
+	static int runVector(const std::vector<int> &input);
+
+	static int runDeque(const std::vector<int> &input);
 };
+
+
 
 template<typename T>
 void PmergeMe::parseInput(T &container, const std::vector<int> &input) {
@@ -141,11 +148,11 @@ T PmergeMe::sort(T &elements, T &rest) {
 
 	if (!pendingChain.empty()) {
 		for (auto &elem: pendingChain) {
-			sortElementIntoChain(elem, mainChain);
+			sortElementIntoChain(elem, mainChain, mainChain.begin(), mainChain.end());
 		}
 	}
 	if (odd) {
-		sortElementIntoChain(odd, mainChain);
+		sortElementIntoChain(odd, mainChain, mainChain.begin(), mainChain.end());
 	}
 
 	std::cout << "Sorted main chain: ";
@@ -216,10 +223,11 @@ void PmergeMe::splitElementsIntoChains(const T &elements, T &mainChain,
 }
 
 template<typename T>
-void PmergeMe::sortElementIntoChain(const std::shared_ptr<Element> &elem, T &mainChain) {
-	auto it = mainChain.begin();
-	while (it != mainChain.end() && (*it)->getMaxValue() < elem->getMaxValue()) {
-		++it;
-	}
+void PmergeMe::sortElementIntoChain(const std::shared_ptr<Element> &elem, T &mainChain, typename T::iterator start, typename T::iterator end) {
+	auto it = std::lower_bound(start, end, elem, [](const std::shared_ptr<Element> &a, const std::shared_ptr<Element> &b) {
+		++globalComparisonCount;
+		return a->getMaxValue() < b->getMaxValue();
+	});
+
 	mainChain.insert(it, elem);
 }
