@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <numeric>
 
 
 Element::Element(int data, const int depth) : _data(data), _depth(depth) {
@@ -118,6 +119,7 @@ int PmergeMe::runDeque(const std::vector<int> &input) {
 
 std::vector<size_t> generateJacobsthalUpTo(size_t maxN) {
 	std::vector<size_t> result;
+	result.reserve(32);
 	for (size_t i = 0; ; ++i) {
 		size_t jacobsthalNumber = (std::pow(2, i + 1) + std::pow(-1, i)) / 3;
 		if (jacobsthalNumber >= maxN) {
@@ -130,23 +132,17 @@ std::vector<size_t> generateJacobsthalUpTo(size_t maxN) {
 }
 
 std::vector<size_t> PmergeMe::generateJacobsthalIndices(const size_t listSize) {
-	if (listSize < 1) return {};
-
 	const std::vector<size_t> jNumbers = generateJacobsthalUpTo(listSize);
 
-	if (jNumbers.empty()) return {};
-
-	auto jCurrentIt = jNumbers.begin() + 1;
-	auto jPreviousIt = jNumbers.begin();
+	std::vector<size_t> differences(jNumbers.size());
+	std::adjacent_difference(jNumbers.begin(), jNumbers.end(), differences.begin());
 
 	std::vector<size_t> indices;
-	while (jCurrentIt != jNumbers.end()) {
-		for (size_t i = 0; i < *jCurrentIt - *jPreviousIt; ++i) {
-			indices.push_back(*jCurrentIt - i - 2);
-		}
-
-		std::advance(jPreviousIt, 1);
-		std::advance(jCurrentIt, 1);
+	indices.reserve(listSize);
+	for (size_t i = 1; i < jNumbers.size(); ++i) {
+		std::generate_n(std::back_inserter(indices), differences[i], [n = jNumbers[i] - 2]() mutable {
+			return n--;
+		});
 	}
 
 	return indices;
