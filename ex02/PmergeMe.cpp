@@ -35,28 +35,34 @@ int Element::getMaxValue() const { // NOLINT(*-no-recursion)
 }
 
 
-void Element::print(const int depth) const { // NOLINT(*-no-recursion)
+void Element::print(const int i) const { // NOLINT(*-no-recursion)
+	static const std::array<const char*, 6> colors = {
+		"\033[0;31m", // Red
+		"\033[0;32m", // Green
+		"\033[0;33m", // Yellow
+		"\033[0;34m", // Blue
+		"\033[0;35m", // Magenta
+		"\033[0;36m"  // Cyan
+	};
+	static const char* resetColor = "\033[0m";
+
 	if (std::holds_alternative<int>(_data)) {
-		// std::cout << std::string(depth, '-') << std::get<int>(_data) << " ";
 		std::cout << std::get<int>(_data) << " ";
-	}
-	else if (std::holds_alternative<Pair>(_data)) {
+	} else if (std::holds_alternative<Pair>(_data)) {
 		const auto& [first, second] = std::get<Pair>(_data);
 
 		// Validate pointers
 		if (!first || !second) {
-			std::cerr << std::string(depth, '-') << "Invalid Pair: Null pointer detected\n";
+			std::cerr << colors[i % colors.size()] << "Invalid Pair: Null pointer detected" << resetColor << "\n";
 			return;
 		}
 
-		// std::cout << std::string(depth, '-') << "(";
-		std::cout << "( ";
-		first->print(depth + 1);
-		second->print(depth + 1);
-		std::cout << ")";
-	}
-	else {
-		std::cerr << std::string(depth, '-') << "Unsupported type in _data\n";
+		std::cout << colors[i % colors.size()] << "( ";
+		first->print( i);
+		second->print( i);
+		std::cout << colors[i % colors.size()] << ")" << resetColor;
+	} else {
+		std::cerr << colors[i % colors.size()] << "Unsupported type in _data" << resetColor << "\n";
 	}
 }
 
