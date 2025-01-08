@@ -57,7 +57,7 @@ class PmergeMe {
 
 	template<class T>
 	static void sortElementIntoChain(const std::shared_ptr<Element> &elem, T &mainChain, typename T::iterator start,
-	                          typename T::iterator end);
+	                                 typename T::iterator end);
 
 public:
 	PmergeMe() = delete;
@@ -76,9 +76,8 @@ public:
 
 	static int runDeque(const std::vector<int> &input);
 
-	static std::vector<size_t> generateJacobsthalIndices(size_t n);
+	static std::vector<size_t> generateJacobsthalIndices(size_t listSize);
 };
-
 
 
 template<typename T>
@@ -149,8 +148,34 @@ T PmergeMe::sort(T &elements, T &rest) {
 	printChains(mainChain, pendingChain, odd, rest);
 
 	if (!pendingChain.empty()) {
-		for (auto &elem: pendingChain) {
-			sortElementIntoChain(elem, mainChain, mainChain.begin(), mainChain.end());
+		auto jacobIndices = generateJacobsthalIndices(pendingChain.size());
+
+		std::cout << "Jacobsthal indices: ";
+		for (size_t idx: jacobIndices) {
+			std::cout << idx << " ";
+		}
+		std::cout << std::endl;
+
+		// Generate a vector of booleans to keep track of which elements have been inserted
+		std::vector<bool> inserted(pendingChain.size(), false);
+
+		// Insert the elements at the Jacobsthal indices
+		for (size_t idx : jacobIndices) {
+			// Safety check
+			if (idx < pendingChain.size()) {
+				std::cout << "Inserting element ";
+				pendingChain[idx]->print(0);
+				std::cout << " at index " << idx + 2 << " (" << idx << ")" << std::endl;
+				sortElementIntoChain(pendingChain[idx], mainChain, mainChain.begin(), mainChain.end());
+				inserted[idx] = true;
+			}
+		}
+
+		// Insert any leftover elements that were not covered by Jacobsthal
+		for (size_t idx = 0; idx < pendingChain.size(); ++idx) {
+			if (!inserted[idx]) {
+				sortElementIntoChain(pendingChain[idx], mainChain, mainChain.begin(), mainChain.end());
+			}
 		}
 	}
 	if (odd) {
@@ -225,11 +250,13 @@ void PmergeMe::splitElementsIntoChains(const T &elements, T &mainChain,
 }
 
 template<typename T>
-void PmergeMe::sortElementIntoChain(const std::shared_ptr<Element> &elem, T &mainChain, typename T::iterator start, typename T::iterator end) {
-	auto it = std::lower_bound(start, end, elem, [](const std::shared_ptr<Element> &a, const std::shared_ptr<Element> &b) {
-		++globalComparisonCount;
-		return a->getMaxValue() < b->getMaxValue();
-	});
+void PmergeMe::sortElementIntoChain(const std::shared_ptr<Element> &elem, T &mainChain, typename T::iterator start,
+                                    typename T::iterator end) {
+	auto it = std::lower_bound(start, end, elem,
+	                           [](const std::shared_ptr<Element> &a, const std::shared_ptr<Element> &b) {
+		                           ++globalComparisonCount;
+		                           return a->getMaxValue() < b->getMaxValue();
+	                           });
 
 	mainChain.insert(it, elem);
 }

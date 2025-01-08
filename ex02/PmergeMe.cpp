@@ -3,6 +3,7 @@
 #include <deque>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 
 Element::Element(int data, const int depth) : _data(data),  _depth(depth) {
@@ -113,35 +114,69 @@ int PmergeMe::runDeque(const std::vector<int> &input) {
 	return globalComparisonCount;
 }
 
-std::vector<size_t> PmergeMe::generateJacobsthalIndices(size_t n) {
+std::vector<size_t> generateJacobsthalUpTo(size_t maxN) {
 	std::vector<size_t> result;
-	if (n == 0) return result;
-
-	// Standard Jacobsthal starts: J(0)=0, J(1)=1
-	// We skip J(0) if you like to begin with 1-based insertion.
-	size_t j0 = 0;
-	size_t j1 = 1;
-
-	// If pendingChain.size() >= 1, we can always push back `1` (if you want J(1) = 1).
-	if (j1 < n) {
-		result.push_back(j1); // Insert index=1 first
-	}
-
-	// Generate subsequent values while they stay < n
-	while (true) {
-		size_t j2 = j1 + 2 * j0; // J(n) = J(n-1) + 2*J(n-2)
-		if (j2 >= n) {
+	for (size_t i = 0; ; ++i) {
+		size_t jacobsthalNumber = (std::pow(2, i + 1) + std::pow(-1, i)) / 3;
+		if (jacobsthalNumber >= maxN) {
 			break;
 		}
-		result.push_back(j2);
-		j0 = j1;
-		j1 = j2;
+		result.push_back(jacobsthalNumber);
 	}
 
-	// Sort them just to be sure they’re in ascending order
-	// (Usually they already come in ascending order, but just in case)
-	std::sort(result.begin(), result.end());
+	if (result.size() > 1 && result[0] == 1 && result[1] == 1) {
+		result.erase(result.begin());
+	}
 
 	return result;
+}
+
+std::vector<size_t> PmergeMe::generateJacobsthalIndices(const size_t listSize) {
+	if (listSize < 1) {
+		return {};
+	}
+
+	const std::vector<size_t> jNumbers = generateJacobsthalUpTo(listSize);
+
+	std::cout << "Jacobsthal numbers: ";
+	for (const auto& j: jNumbers) {
+		std::cout << j << " ";
+	}
+	std::cout << std::endl;
+	std::vector<size_t> indices;
+
+	if (jNumbers.empty()) {
+		return { };
+	}
+
+	if (jNumbers.size() == 1) {
+		return { 0, 1 };
+	}
+
+	indices.push_back(1);
+	indices.push_back(0);
+
+	if (jNumbers.size() == 2) {
+		return indices;
+	}
+
+	auto jCurrentIt = jNumbers.begin() + 2;
+	auto jPreviousIt = jNumbers.begin() + 1;
+
+	while (jCurrentIt != jNumbers.end()) {
+		const size_t diff = *jCurrentIt - *jPreviousIt;
+
+		std::cout << "jCurrent: " << *jCurrentIt << ", jPrevious: " << *jPreviousIt << ", diff: " << diff << std::endl;
+
+		for (size_t i = 0; i < diff; ++i) {
+			indices.push_back(*jCurrentIt - i - 2);
+		}
+
+		if (jCurrentIt == jNumbers.end() - 1) break;
+		jPreviousIt = jPreviousIt + 1;
+		jCurrentIt = jCurrentIt + 1;
+	}
+
+	return indices;
 }
 
