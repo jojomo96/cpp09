@@ -33,6 +33,9 @@ class PmergeMe {
 	template<typename T>
 	static void print(const T &elements);
 
+	template<class T>
+	static void printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd);
+
 	template<typename T>
 	static void run(T &elements);
 
@@ -83,6 +86,24 @@ void PmergeMe::print(const T &elements) {
 }
 
 template<typename T>
+void PmergeMe::printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd) {
+	std::cout << std::endl;
+	std::cout << "Main chain: ";
+	for (const auto &elem : mainChain) {
+		elem->print(0);
+	}
+	std::cout << " | Pending chain: ";
+	for (const auto &elem : pendingChain) {
+		elem->print(0);
+	}
+	std::cout << " | Odd: ";
+	if (odd) {
+		odd->print(0);
+	}
+	std::cout << std::endl;
+}
+
+template<typename T>
 void PmergeMe::run(T &elements) {
 	print(elements);
 	sort(elements);
@@ -100,15 +121,9 @@ T PmergeMe::sort(T &elements) {
 	std::shared_ptr<Element> odd;
 
 	splitElementsIntoChains(elements, mainChain, pendingChain, odd);
-	std::cout << "Main chain: " << std::endl;
-	print(mainChain);
-	std::cout << "Pending chain: " << std::endl;
-	print(pendingChain);
-	if (odd) {
-		std::cout << "Odd: " << std::endl;
-		odd->print(0);
-		std::cout << std::endl;
-	}
+
+	printChains(mainChain, pendingChain, odd);
+
 	if (!pendingChain.empty()) {
 		for (auto &elem: pendingChain) {
 			sortElementIntoChain(elem, mainChain);
@@ -118,7 +133,7 @@ T PmergeMe::sort(T &elements) {
 		sortElementIntoChain(odd, mainChain);
 	}
 
-	std::cout << "Sorted main chain: " << std::endl;
+	std::cout << "Sorted main chain: " ;
 	print(mainChain);
 	return mainChain;
 }
