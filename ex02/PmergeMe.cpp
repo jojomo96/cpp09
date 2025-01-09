@@ -44,17 +44,43 @@ inline int PmergeMe::getGlobalComparisonCount() {
 	return globalComparisonCount;
 }
 
-int PmergeMe::runVector(const std::vector<int> &input) {
+int PmergeMe::runVector(const std::vector<int> &input, const bool _printDebug) {
+	printDebug = _printDebug;
 	std::vector<std::shared_ptr<Element> > elements;
+	// Add this code where you want to measure the time
+	const auto start = std::chrono::high_resolution_clock::now();
 	parseInput(elements, input);
 	run(elements);
+	const auto end = std::chrono::high_resolution_clock::now();
+	const std::chrono::duration<double, std::micro> elapsed = end - start;
+	std::cout << "Time to process a range of " << elements.size() << " elements with std::vector : " << elapsed.count() << " us" << std::endl;
 	return globalComparisonCount;
 }
 
-int PmergeMe::runDeque(const std::vector<int> &input) {
+int PmergeMe::runDeque(const std::vector<int> &input, const bool _printDebug) {
+	printDebug = _printDebug;
 	std::deque<std::shared_ptr<Element> > elements;
+
+
 	parseInput(elements, input);
+
+	std::cout << "Before : ";
+	printAllElements(elements, true);
+	elements.clear();
+
+	// Add this code where you want to measure the time
+	const auto start = std::chrono::high_resolution_clock::now();
+	parseInput(elements, input);
+
 	run(elements);
+
+	const auto end = std::chrono::high_resolution_clock::now();
+	const std::chrono::duration<double, std::micro> elapsed = end - start;
+
+	std::cout << "After  : ";
+	printAllElements(elements, true);
+	std::cout << "Time to process a range of " << elements.size() << " elements with std::deque : " << elapsed.count() << " us" << std::endl;
+
 	return globalComparisonCount;
 }
 
@@ -113,8 +139,8 @@ void PmergeMe::printInsertion(const std::shared_ptr<Element> &elem, const size_t
 	std::cout << "idx " << boundaryIdx << std::endl;
 }
 
-void Element::print(const int i) const {// NOLINT(*-no-recursion)
-	if (!printDebug) return;
+void Element::print(const int i, const bool overridePrint) const {// NOLINT(*-no-recursion)
+	if (!printDebug && overridePrint) return;
 
 	static constexpr std::array<const char *, 6> colors = {
 		"\033[0;31m", // Red
@@ -147,12 +173,13 @@ void Element::print(const int i) const {// NOLINT(*-no-recursion)
 }
 
 void Element::printSwap(const std::shared_ptr<Element> &first, const std::shared_ptr<Element> &second) {
+	++globalComparisonCount;
+	if (!printDebug) return;
 	std::cout << "Swapping elements: ";
 	first->print(0);
 	std::cout << " and ";
 	second->print(0);
 	std::cout << std::endl;
-	++globalComparisonCount;
 }
 
 void PmergeMe::printOddInsertion(const std::shared_ptr<Element>& odd) {

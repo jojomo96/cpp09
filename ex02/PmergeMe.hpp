@@ -8,7 +8,7 @@ struct Element;
 
 inline int globalComparisonCount = 0;
 
-inline bool printDebug = true;
+inline bool printDebug = false;
 
 using Pair = std::pair<std::shared_ptr<Element>, std::shared_ptr<Element> >;
 
@@ -22,7 +22,7 @@ struct Element {
 
 	[[nodiscard]] int getMaxValue() const;
 
-	void print(int i) const;
+	void print(int i, bool overridePrint = false) const;
 
 	static void printSwap(const std::shared_ptr<Element> &first, const std::shared_ptr<Element> &second);
 
@@ -38,7 +38,7 @@ class PmergeMe {
 	static void parseInput(T &container, const std::vector<int> &input);
 
 	template<typename T>
-	static void printAllElements(const T &elements);
+	static void printAllElements(const T &elements, bool overridePrint = false);
 
 	template<typename T>
 	static void printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd,
@@ -102,9 +102,9 @@ public:
 
 	static int getGlobalComparisonCount();
 
-	static int runVector(const std::vector<int> &input);
+	static int runVector(const std::vector<int> &input, bool _printDebug = false);
 
-	static int runDeque(const std::vector<int> &input);
+	static int runDeque(const std::vector<int> &input, bool _printDebug = false);
 
 	static std::vector<size_t> generateJacobsthalIndices(size_t listSize);
 };
@@ -119,7 +119,6 @@ void PmergeMe::parseInput(T &container, const std::vector<int> &input) {
 
 template<typename T>
 void PmergeMe::run(T &elements) {
-	printAllElements(elements);
 	T rest = {};
 	sort(elements, rest);
 }
@@ -281,8 +280,8 @@ typename T::iterator PmergeMe::sortElementIntoChain(const std::shared_ptr<Elemen
 
 #pragma region Print functions
 template<typename T>
-void PmergeMe::printAllElements(const T &elements) {
-	if (!printDebug) return;
+void PmergeMe::printAllElements(const T &elements, bool overridePrint) {
+	if (!printDebug && !overridePrint) return;
 	for (size_t i = 0; i < elements.size(); ++i) {
 		elements[i]->print(i);
 	}
