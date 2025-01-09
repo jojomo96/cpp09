@@ -40,24 +40,24 @@ class PmergeMe {
 	template<typename T>
 	static void printAllElements(const T &elements);
 
-	template<class T>
+	template<typename T>
 	static void printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd,
 	                        const T &rest);
 
 	template<typename T>
 	static void run(T &elements);
 
-	template<class T>
+	template<typename T>
 	static void handleJacobsthalIndices(T &mainChain, T &pendingChain, std::vector<size_t> mainChainPositions,
 	                                    const std::vector<size_t> &jacobIndices, std::string prefix);
 
-	template<class T>
+	template<typename T>
 	static void processPendingChain(T &mainChain, T &pendingChain);
 
-	template<class T>
-	static void handleOddElement(T mainChain, std::shared_ptr<Element> odd);
+	template<typename T>
+	static void handleOddElement(T &mainChain, std::shared_ptr<Element> odd);
 
-	template<class T>
+	template<typename T>
 	static void printJacobsthalIndices(const std::vector<size_t> &jacobIndices);
 
 	static void printOddInsertion(const std::shared_ptr<Element> &odd, const std::string &prefix);
@@ -154,7 +154,7 @@ void PmergeMe::processPendingChain(T &mainChain, T &pendingChain) {
 }
 
 template<typename T>
-void PmergeMe::handleOddElement(T mainChain, std::shared_ptr<Element> odd) {
+void PmergeMe::handleOddElement(T &mainChain, std::shared_ptr<Element> odd) {
 	if (!odd) return;
 	printOddInsertion(odd, "Odd");
 	sortElementIntoChain(odd, mainChain, mainChain.end());
@@ -180,7 +180,7 @@ T PmergeMe::sort(T &elements, T &rest) {
 	}
 
 	// Insert pending chain elements into main chain based on Jacobsthal indices (if only 1 element, insert without Jacobsthal)
-	handlePendingChainElements<T>(mainChain, pendingChain);
+	processPendingChain(mainChain, pendingChain);
 
 	// Insert odd element into main chain (if exists)
 	handleOddElement(mainChain, odd);
