@@ -8,6 +8,8 @@ struct Element;
 
 inline int globalComparisonCount = 0;
 
+inline bool printDebug = true;
+
 using Pair = std::pair<std::shared_ptr<Element>, std::shared_ptr<Element> >;
 
 struct Element {
@@ -21,6 +23,8 @@ struct Element {
 	[[nodiscard]] int getMaxValue() const;
 
 	void print(int i) const;
+
+	static void printSwap(const std::shared_ptr<Element> &first, const std::shared_ptr<Element> &second);
 
 	void sortElement();
 };
@@ -43,9 +47,16 @@ class PmergeMe {
 	template<typename T>
 	static void run(T &elements);
 
+	template<class T>
+	static void printOddInsertion(std::shared_ptr<Element> odd);
+
+	template<class T>
+	static void printJacobsthalIndices(std::vector<size_t> jacobIndices);
+
 	static size_t getBoundary(const std::vector<size_t> &indices, size_t value);
 
-	static void printInsertion(const std::shared_ptr<Element> &elem, size_t idx, const std::shared_ptr<Element> &boundaryElem,
+	static void printInsertion(const std::shared_ptr<Element> &elem, size_t idx,
+	                           const std::shared_ptr<Element> &boundaryElem,
 	                           size_t boundaryIdx, const std::string &prefix = "     ");
 
 	template<typename T>
@@ -94,43 +105,6 @@ void PmergeMe::parseInput(T &container, const std::vector<int> &input) {
 }
 
 template<typename T>
-void PmergeMe::print(const T &elements) {
-	for (size_t i = 0; i < elements.size(); ++i) {
-		elements[i]->print(i);
-	}
-	std::cout << std::endl;
-}
-
-template<typename T>
-void PmergeMe::printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd,
-                           const T &rest) {
-	std::cout << std::endl;
-	std::cout << "Main: ";
-	for (size_t i = 0; i < mainChain.size(); ++i) {
-		mainChain[i]->print(i);
-	}
-
-	if (!pendingChain.empty()) {
-		std::cout << " | Pend: ";
-		for (size_t i = 0; i < pendingChain.size(); ++i) {
-			pendingChain[i]->print(i);
-		}
-	}
-	if (odd) {
-		std::cout << " | Odd: ";
-		odd->print(0);
-	}
-
-	if (!rest.empty()) {
-		std::cout << " | Rest: ";
-		for (size_t i = 0; i < rest.size(); ++i) {
-			rest[rest.size() - 1 - i]->print(i);
-		}
-	}
-	std::cout << std::endl;
-}
-
-template<typename T>
 void PmergeMe::run(T &elements) {
 	print(elements);
 	T rest = {};
@@ -151,21 +125,15 @@ T PmergeMe::sort(T &elements, T &rest) {
 
 	splitElementsIntoChains(elements, mainChain, pendingChain, odd, rest);
 
-	std::cout << "-------------------------------------------" << std::endl;
-	printChains(mainChain, pendingChain, odd, rest);
+	if (printDebug) {
+		std::cout << "-------------------------------------------" << std::endl;
+		printChains(mainChain, pendingChain, odd, rest);
+	}
 
 	if (!pendingChain.empty()) {
 		auto jacobIndices = generateJacobsthalIndices(pendingChain.size());
 
-		if (jacobIndices.empty()) {
-			std::cout << "Not enough elements in pending chain to generate Jacobsthal indices." << std::endl;
-		} else {
-			std::cout << "Jacobsthal indices: ";
-			for (const size_t idx: jacobIndices) {
-				std::cout << idx << " ";
-			}
-			std::cout << std::endl;
-		}
+		printJacobsthalIndices<T>(jacobIndices);
 
 		// Generate a vector of booleans to keep track of which elements have been inserted
 		std::vector<bool> inserted(pendingChain.size(), false);
@@ -180,7 +148,7 @@ T PmergeMe::sort(T &elements, T &rest) {
 			if (idx < pendingChain.size()) {
 				size_t boundaryIdx = getBoundary(mainChainIndices, idx);
 				printInsertion(pendingChain[idx], idx, mainChain[boundaryIdx], boundaryIdx, "J -> ");
-				lastInsertion = sortElementIntoChain(pendingChain[idx], mainChain, mainChain.begin() + boundaryIdx );
+				lastInsertion = sortElementIntoChain(pendingChain[idx], mainChain, mainChain.begin() + boundaryIdx);
 				mainChainIndices.insert(mainChainIndices.begin() + (lastInsertion - mainChain.begin()), 0);
 				inserted[idx] = true;
 			}
@@ -189,7 +157,7 @@ T PmergeMe::sort(T &elements, T &rest) {
 		// Insert any leftover elements that were not covered by Jacobsthal
 		for (size_t idx = pendingChain.size(); idx > 0; --idx) {
 			if (!inserted[idx - 1]) {
-				size_t boundaryIdx = getBoundary(mainChainIndices, idx-1);
+				size_t boundaryIdx = getBoundary(mainChainIndices, idx - 1);
 				printInsertion(pendingChain[idx - 1], idx - 1, mainChain[boundaryIdx], boundaryIdx);
 				lastInsertion = sortElementIntoChain(pendingChain[idx - 1], mainChain, mainChain.begin() + boundaryIdx);
 				mainChainIndices.insert(mainChainIndices.begin() + (lastInsertion - mainChain.begin()), 0);
@@ -197,14 +165,14 @@ T PmergeMe::sort(T &elements, T &rest) {
 		}
 	}
 	if (odd) {
-		std::cout << "     Insert odd elem ";
-		odd->print(0);
-		std::cout << " into main chain" << std::endl;
+		printOddInsertion<T>(odd);
 		sortElementIntoChain(odd, mainChain, mainChain.end());
 	}
 
-	std::cout << "Sorted main chain: ";
-	print(mainChain);
+	if (printDebug) {
+		std::cout << "Sorted main chain: ";
+		print(mainChain);
+	}
 	return mainChain;
 }
 
@@ -281,3 +249,68 @@ typename T::iterator PmergeMe::sortElementIntoChain(const std::shared_ptr<Elemen
 
 	return mainChain.insert(it, elem);
 }
+
+#pragma region Print functions
+template<typename T>
+void PmergeMe::print(const T &elements) {
+	if (!printDebug) return;
+	for (size_t i = 0; i < elements.size(); ++i) {
+		elements[i]->print(i);
+	}
+	std::cout << std::endl;
+}
+
+template <typename T>
+void PmergeMe::printJacobsthalIndices(std::vector<size_t> jacobIndices) {
+	if (printDebug) {
+		if (jacobIndices.empty()) {
+			std::cout << "Not enough elements in pending chain to generate Jacobsthal indices." << std::endl;
+		} else {
+			std::cout << "Jacobsthal indices: ";
+			for (const size_t idx: jacobIndices) {
+				std::cout << idx << " ";
+			}
+			std::cout << std::endl;
+		}
+	}
+}
+
+template<typename T>
+void PmergeMe::printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd,
+                           const T &rest) {
+	if (!printDebug) return;
+	std::cout << std::endl;
+	std::cout << "Main: ";
+	for (size_t i = 0; i < mainChain.size(); ++i) {
+		mainChain[i]->print(i);
+	}
+
+	if (!pendingChain.empty()) {
+		std::cout << " | Pend: ";
+		for (size_t i = 0; i < pendingChain.size(); ++i) {
+			pendingChain[i]->print(i);
+		}
+	}
+	if (odd) {
+		std::cout << " | Odd: ";
+		odd->print(0);
+	}
+
+	if (!rest.empty()) {
+		std::cout << " | Rest: ";
+		for (size_t i = 0; i < rest.size(); ++i) {
+			rest[rest.size() - 1 - i]->print(i);
+		}
+	}
+	std::cout << std::endl;
+}
+
+template <typename T>
+void PmergeMe::printOddInsertion(std::shared_ptr<Element> odd) {
+	if (printDebug) {
+		std::cout << "     Insert odd elem ";
+		odd->print(0);
+		std::cout << " into main chain" << std::endl;
+	}
+}
+#pragma endregion
