@@ -147,3 +147,13 @@ std::vector<size_t> PmergeMe::generateJacobsthalIndices(const size_t listSize) {
 
 	return indices;
 }
+
+size_t PmergeMe::getBoundary(const std::vector<size_t> &indices, size_t value) {
+	value += 2;
+	for (size_t i = 0; i < indices.size(); ++i) {
+		if (indices[i] == value) {
+			return i;
+		}
+	}
+	return -1;
+}
