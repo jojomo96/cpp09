@@ -64,10 +64,10 @@ std::vector<size_t> generateJacobsthalUpTo(const size_t maxN) {
 	result.reserve(32);
 	for (size_t i = 0; ; ++i) {
 		size_t jacobsthalNumber = (std::pow(2, i + 1) + std::pow(-1, i)) / 3;
+		result.push_back(jacobsthalNumber);
 		if (jacobsthalNumber >= maxN) {
 			break;
 		}
-		result.push_back(jacobsthalNumber);
 	}
 
 	return result;
@@ -155,5 +155,13 @@ void Element::printSwap(const std::shared_ptr<Element> &first, const std::shared
 	second->print(0);
 	std::cout << std::endl;
 	++globalComparisonCount;
+}
+
+void PmergeMe::printOddInsertion(const std::shared_ptr<Element>& odd, const std::string &prefix ) {
+	if (printDebug) {
+		std::cout << "     Insert " << prefix << " elem ";
+		odd->print(0);
+		std::cout << " into main chain" << std::endl;
+	}
 }
 #pragma endregion

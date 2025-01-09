@@ -38,7 +38,7 @@ class PmergeMe {
 	static void parseInput(T &container, const std::vector<int> &input);
 
 	template<typename T>
-	static void print(const T &elements);
+	static void printAllElements(const T &elements);
 
 	template<class T>
 	static void printChains(const T &mainChain, const T &pendingChain, const std::shared_ptr<Element> &odd,
@@ -48,10 +48,9 @@ class PmergeMe {
 	static void run(T &elements);
 
 	template<class T>
-	static void printOddInsertion(std::shared_ptr<Element> odd);
+	static void printJacobsthalIndices(const std::vector<size_t> &jacobIndices);
 
-	template<class T>
-	static void printJacobsthalIndices(std::vector<size_t> jacobIndices);
+	static void printOddInsertion(const std::shared_ptr<Element> &odd, const std::string &prefix);
 
 	static size_t getBoundary(const std::vector<size_t> &indices, size_t value);
 
@@ -106,7 +105,7 @@ void PmergeMe::parseInput(T &container, const std::vector<int> &input) {
 
 template<typename T>
 void PmergeMe::run(T &elements) {
-	print(elements);
+	printAllElements(elements);
 	T rest = {};
 	sort(elements, rest);
 }
@@ -143,35 +142,33 @@ T PmergeMe::sort(T &elements, T &rest) {
 
 		auto lastInsertion = mainChain.begin(); // Lower bound for the next insertion
 
+		size_t boundaryIdx = getBoundary(mainChainIndices, 0);
+		std::string prefix = "J -> ";
+
+		if (pendingChain.size() < 2) {
+			jacobIndices.push_back(0);
+			prefix = "S -> ";
+		}
 		// Insert the elements at the Jacobsthal indices
 		for (size_t idx: jacobIndices) {
 			if (idx < pendingChain.size()) {
-				size_t boundaryIdx = getBoundary(mainChainIndices, idx);
-				printInsertion(pendingChain[idx], idx, mainChain[boundaryIdx], boundaryIdx, "J -> ");
+				boundaryIdx = getBoundary(mainChainIndices, idx);
+				printInsertion(pendingChain[idx], idx, mainChain[boundaryIdx], boundaryIdx, prefix);
 				lastInsertion = sortElementIntoChain(pendingChain[idx], mainChain, mainChain.begin() + boundaryIdx);
 				mainChainIndices.insert(mainChainIndices.begin() + (lastInsertion - mainChain.begin()), 0);
 				inserted[idx] = true;
 			}
 		}
-
-		// Insert any leftover elements that were not covered by Jacobsthal
-		for (size_t idx = pendingChain.size(); idx > 0; --idx) {
-			if (!inserted[idx - 1]) {
-				size_t boundaryIdx = getBoundary(mainChainIndices, idx - 1);
-				printInsertion(pendingChain[idx - 1], idx - 1, mainChain[boundaryIdx], boundaryIdx);
-				lastInsertion = sortElementIntoChain(pendingChain[idx - 1], mainChain, mainChain.begin() + boundaryIdx);
-				mainChainIndices.insert(mainChainIndices.begin() + (lastInsertion - mainChain.begin()), 0);
-			}
-		}
 	}
+
 	if (odd) {
-		printOddInsertion<T>(odd);
+		printOddInsertion(odd, "Odd");
 		sortElementIntoChain(odd, mainChain, mainChain.end());
 	}
 
 	if (printDebug) {
 		std::cout << "Sorted main chain: ";
-		print(mainChain);
+		printAllElements(mainChain);
 	}
 	return mainChain;
 }
@@ -252,7 +249,7 @@ typename T::iterator PmergeMe::sortElementIntoChain(const std::shared_ptr<Elemen
 
 #pragma region Print functions
 template<typename T>
-void PmergeMe::print(const T &elements) {
+void PmergeMe::printAllElements(const T &elements) {
 	if (!printDebug) return;
 	for (size_t i = 0; i < elements.size(); ++i) {
 		elements[i]->print(i);
@@ -260,8 +257,8 @@ void PmergeMe::print(const T &elements) {
 	std::cout << std::endl;
 }
 
-template <typename T>
-void PmergeMe::printJacobsthalIndices(std::vector<size_t> jacobIndices) {
+template<typename T>
+void PmergeMe::printJacobsthalIndices(const std::vector<size_t> &jacobIndices) {
 	if (printDebug) {
 		if (jacobIndices.empty()) {
 			std::cout << "Not enough elements in pending chain to generate Jacobsthal indices." << std::endl;
@@ -305,12 +302,4 @@ void PmergeMe::printChains(const T &mainChain, const T &pendingChain, const std:
 	std::cout << std::endl;
 }
 
-template <typename T>
-void PmergeMe::printOddInsertion(std::shared_ptr<Element> odd) {
-	if (printDebug) {
-		std::cout << "     Insert odd elem ";
-		odd->print(0);
-		std::cout << " into main chain" << std::endl;
-	}
-}
 #pragma endregion
