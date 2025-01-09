@@ -48,6 +48,11 @@ class PmergeMe {
 	static void run(T &elements);
 
 	template<typename T>
+	static std::vector<size_t>::iterator updateMainElementPositions(T &mainChain,
+	                                                                std::vector<size_t> & mainChainPositions,
+	                                                                 typename T::iterator & lastInsertion);
+
+	template<typename T>
 	static void handleJacobsthalIndices(T &mainChain, T &pendingChain, std::vector<size_t> mainChainPositions,
 	                                    const std::vector<size_t> &jacobIndices, std::string prefix);
 
@@ -57,10 +62,9 @@ class PmergeMe {
 	template<typename T>
 	static void handleOddElement(T &mainChain, std::shared_ptr<Element> odd);
 
-	template<typename T>
 	static void printJacobsthalIndices(const std::vector<size_t> &jacobIndices);
 
-	static void printOddInsertion(const std::shared_ptr<Element> &odd, const std::string &prefix);
+	static void printOddInsertion(const std::shared_ptr<Element> &odd);
 
 	static size_t getBoundary(const std::vector<size_t> &indices, size_t value);
 
@@ -121,6 +125,12 @@ void PmergeMe::run(T &elements) {
 }
 
 template<typename T>
+std::vector<size_t>::iterator PmergeMe::updateMainElementPositions(T &mainChain,
+                                                                   std::vector<size_t> &mainChainPositions, typename T::iterator &lastInsertion) {
+	return mainChainPositions.insert(mainChainPositions.begin() + (lastInsertion - mainChain.begin()), 0);
+}
+
+template<typename T>
 void PmergeMe::handleJacobsthalIndices(T &mainChain, T &pendingChain, std::vector<size_t> mainChainPositions,
                                        const std::vector<size_t> &jacobIndices, const std::string prefix) {
 	auto lastInsertion = mainChain.begin();
@@ -129,7 +139,7 @@ void PmergeMe::handleJacobsthalIndices(T &mainChain, T &pendingChain, std::vecto
 			size_t boundaryIdx = getBoundary(mainChainPositions, idx);
 			printInsertion(pendingChain[idx], idx, mainChain[boundaryIdx], boundaryIdx, prefix);
 			lastInsertion = sortElementIntoChain(pendingChain[idx], mainChain, mainChain.begin() + boundaryIdx);
-			mainChainPositions.insert(mainChainPositions.begin() + (lastInsertion - mainChain.begin()), 0);
+			updateMainElementPositions(mainChain, mainChainPositions, lastInsertion);
 		}
 	}
 }
@@ -138,16 +148,18 @@ template<typename T>
 void PmergeMe::processPendingChain(T &mainChain, T &pendingChain) {
 	if (pendingChain.empty()) return;
 
+	// Generate map with positions of elements in main chain
 	std::vector<size_t> mainChainPositions(mainChain.size());
 	std::iota(mainChainPositions.begin(), mainChainPositions.end(), 0); // Initialize with 0, 1, 2, ...
 
 	std::vector<size_t> jacobIndices;
 
+	// If only 1 element, insert without Jacobsthal
 	if (pendingChain.size() < 2) {
 		jacobIndices.push_back(0);
 	} else {
 		jacobIndices = generateJacobsthalIndices(pendingChain.size());
-		printJacobsthalIndices<T>(jacobIndices);
+		printJacobsthalIndices(jacobIndices);
 	}
 	std::string prefix = pendingChain.size() < 2 ? "S -> " : "J -> ";
 	handleJacobsthalIndices(mainChain, pendingChain, mainChainPositions, jacobIndices, prefix);
@@ -156,7 +168,7 @@ void PmergeMe::processPendingChain(T &mainChain, T &pendingChain) {
 template<typename T>
 void PmergeMe::handleOddElement(T &mainChain, std::shared_ptr<Element> odd) {
 	if (!odd) return;
-	printOddInsertion(odd, "Odd");
+	printOddInsertion(odd);
 	sortElementIntoChain(odd, mainChain, mainChain.end());
 }
 
@@ -275,21 +287,6 @@ void PmergeMe::printAllElements(const T &elements) {
 		elements[i]->print(i);
 	}
 	std::cout << std::endl;
-}
-
-template<typename T>
-void PmergeMe::printJacobsthalIndices(const std::vector<size_t> &jacobIndices) {
-	if (printDebug) {
-		if (jacobIndices.empty()) {
-			std::cout << "Not enough elements in pending chain to generate Jacobsthal indices." << std::endl;
-		} else {
-			std::cout << "Jacobsthal indices: ";
-			for (const size_t idx: jacobIndices) {
-				std::cout << idx << " ";
-			}
-			std::cout << std::endl;
-		}
-	}
 }
 
 template<typename T>

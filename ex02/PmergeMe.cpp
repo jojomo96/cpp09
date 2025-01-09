@@ -13,13 +13,12 @@ Element::Element(const std::shared_ptr<Element> &first, const std::shared_ptr<El
 	: _data(Pair(first, second)), _depth(depth) {
 }
 
-int Element::getMaxValue() const {
-	// NOLINT(*-no-recursion)
+int Element::getMaxValue() const { // NOLINT(*-no-recursion)
 	if (std::holds_alternative<int>(_data)) {
 		return std::get<int>(_data); // Base Case
 	}
 	const auto &[first, second] = std::get<Pair>(_data);
-	return std::max(first->getMaxValue(), second->getMaxValue());
+	return  second->getMaxValue();
 }
 
 
@@ -101,8 +100,8 @@ size_t PmergeMe::getBoundary(const std::vector<size_t> &indices, size_t value) {
 }
 
 #pragma region Print functions
-void PmergeMe::printInsertion(const std::shared_ptr<Element> &elem, size_t idx,
-                              const std::shared_ptr<Element> &boundaryElem, size_t boundaryIdx,
+void PmergeMe::printInsertion(const std::shared_ptr<Element> &elem, const size_t idx,
+                              const std::shared_ptr<Element> &boundaryElem, const size_t boundaryIdx,
                               const std::string &prefix) {
 	if (!printDebug) return;
 	std::cout << prefix << "Insert elem b" << idx + 2 << " ";
@@ -114,10 +113,9 @@ void PmergeMe::printInsertion(const std::shared_ptr<Element> &elem, size_t idx,
 	std::cout << "idx " << boundaryIdx << std::endl;
 }
 
-void Element::print(const int i) const {
+void Element::print(const int i) const {// NOLINT(*-no-recursion)
 	if (!printDebug) return;
 
-	// NOLINT(*-no-recursion)
 	static constexpr std::array<const char *, 6> colors = {
 		"\033[0;31m", // Red
 		"\033[0;32m", // Green
@@ -157,11 +155,25 @@ void Element::printSwap(const std::shared_ptr<Element> &first, const std::shared
 	++globalComparisonCount;
 }
 
-void PmergeMe::printOddInsertion(const std::shared_ptr<Element>& odd, const std::string &prefix ) {
+void PmergeMe::printOddInsertion(const std::shared_ptr<Element>& odd) {
 	if (printDebug) {
-		std::cout << "     Insert " << prefix << " elem ";
+		std::cout << "O -> Insert elem ";
 		odd->print(0);
 		std::cout << " into main chain" << std::endl;
+	}
+}
+
+void PmergeMe::printJacobsthalIndices(const std::vector<size_t> &jacobIndices) {
+	if (printDebug) {
+		if (jacobIndices.empty()) {
+			std::cout << "Not enough elements in pending chain to generate Jacobsthal indices." << std::endl;
+		} else {
+			std::cout << "Jacobsthal indices: ";
+			for (const size_t idx: jacobIndices) {
+				std::cout << idx << " ";
+			}
+			std::cout << std::endl;
+		}
 	}
 }
 #pragma endregion
