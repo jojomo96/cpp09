@@ -48,6 +48,16 @@ class PmergeMe {
 	static void run(T &elements);
 
 	template<class T>
+	static void handleJacobsthalIndices(T &mainChain, T &pendingChain, std::vector<size_t> mainChainPositions,
+	                                    const std::vector<size_t> &jacobIndices, std::string prefix);
+
+	template<class T>
+	static void processPendingChain(T &mainChain, T &pendingChain);
+
+	template<class T>
+	static void handleOddElement(T mainChain, std::shared_ptr<Element> odd);
+
+	template<class T>
 	static void printJacobsthalIndices(const std::vector<size_t> &jacobIndices);
 
 	static void printOddInsertion(const std::shared_ptr<Element> &odd, const std::string &prefix);
@@ -65,7 +75,7 @@ class PmergeMe {
 	static bool mergePairs(T &elements, T &rest);
 
 	template<typename T>
-	static void swapPairs(T &elements);
+	static void swapPairs(T &elements, T &rest);
 
 	template<typename T>
 	static void splitElementsIntoChains(const T &elements, T &mainChain, T &pendingChain, std::shared_ptr<Element> &odd,
@@ -111,10 +121,49 @@ void PmergeMe::run(T &elements) {
 }
 
 template<typename T>
+void PmergeMe::handleJacobsthalIndices(T &mainChain, T &pendingChain, std::vector<size_t> mainChainPositions,
+                                       const std::vector<size_t> &jacobIndices, const std::string prefix) {
+	auto lastInsertion = mainChain.begin();
+	for (size_t idx: jacobIndices) {
+		if (idx < pendingChain.size()) {
+			size_t boundaryIdx = getBoundary(mainChainPositions, idx);
+			printInsertion(pendingChain[idx], idx, mainChain[boundaryIdx], boundaryIdx, prefix);
+			lastInsertion = sortElementIntoChain(pendingChain[idx], mainChain, mainChain.begin() + boundaryIdx);
+			mainChainPositions.insert(mainChainPositions.begin() + (lastInsertion - mainChain.begin()), 0);
+		}
+	}
+}
+
+template<typename T>
+void PmergeMe::processPendingChain(T &mainChain, T &pendingChain) {
+	if (pendingChain.empty()) return;
+
+	std::vector<size_t> mainChainPositions(mainChain.size());
+	std::iota(mainChainPositions.begin(), mainChainPositions.end(), 0); // Initialize with 0, 1, 2, ...
+
+	std::vector<size_t> jacobIndices;
+
+	if (pendingChain.size() < 2) {
+		jacobIndices.push_back(0);
+	} else {
+		jacobIndices = generateJacobsthalIndices(pendingChain.size());
+		printJacobsthalIndices<T>(jacobIndices);
+	}
+	std::string prefix = pendingChain.size() < 2 ? "S -> " : "J -> ";
+	handleJacobsthalIndices(mainChain, pendingChain, mainChainPositions, jacobIndices, prefix);
+}
+
+template<typename T>
+void PmergeMe::handleOddElement(T mainChain, std::shared_ptr<Element> odd) {
+	if (!odd) return;
+	printOddInsertion(odd, "Odd");
+	sortElementIntoChain(odd, mainChain, mainChain.end());
+}
+
+template<typename T>
 T PmergeMe::sort(T &elements, T &rest) {
 	if (mergePairs(elements, rest)) {
-		swapPairs(elements);
-		printChains(elements, {}, nullptr, rest);
+		swapPairs(elements, rest);
 		elements = sort(elements, rest);
 	}
 
@@ -122,6 +171,7 @@ T PmergeMe::sort(T &elements, T &rest) {
 	T pendingChain;
 	std::shared_ptr<Element> odd;
 
+	// Split elements into main chain, pending chain, odd element and rest
 	splitElementsIntoChains(elements, mainChain, pendingChain, odd, rest);
 
 	if (printDebug) {
@@ -129,42 +179,11 @@ T PmergeMe::sort(T &elements, T &rest) {
 		printChains(mainChain, pendingChain, odd, rest);
 	}
 
-	if (!pendingChain.empty()) {
-		auto jacobIndices = generateJacobsthalIndices(pendingChain.size());
+	// Insert pending chain elements into main chain based on Jacobsthal indices (if only 1 element, insert without Jacobsthal)
+	handlePendingChainElements<T>(mainChain, pendingChain);
 
-		printJacobsthalIndices<T>(jacobIndices);
-
-		// Generate a vector of booleans to keep track of which elements have been inserted
-		std::vector<bool> inserted(pendingChain.size(), false);
-
-		std::vector<size_t> mainChainIndices(mainChain.size());
-		std::iota(mainChainIndices.begin(), mainChainIndices.end(), 0); // Initialize with 0, 1, 2, ...
-
-		auto lastInsertion = mainChain.begin(); // Lower bound for the next insertion
-
-		size_t boundaryIdx = getBoundary(mainChainIndices, 0);
-		std::string prefix = "J -> ";
-
-		if (pendingChain.size() < 2) {
-			jacobIndices.push_back(0);
-			prefix = "S -> ";
-		}
-		// Insert the elements at the Jacobsthal indices
-		for (size_t idx: jacobIndices) {
-			if (idx < pendingChain.size()) {
-				boundaryIdx = getBoundary(mainChainIndices, idx);
-				printInsertion(pendingChain[idx], idx, mainChain[boundaryIdx], boundaryIdx, prefix);
-				lastInsertion = sortElementIntoChain(pendingChain[idx], mainChain, mainChain.begin() + boundaryIdx);
-				mainChainIndices.insert(mainChainIndices.begin() + (lastInsertion - mainChain.begin()), 0);
-				inserted[idx] = true;
-			}
-		}
-	}
-
-	if (odd) {
-		printOddInsertion(odd, "Odd");
-		sortElementIntoChain(odd, mainChain, mainChain.end());
-	}
+	// Insert odd element into main chain (if exists)
+	handleOddElement(mainChain, odd);
 
 	if (printDebug) {
 		std::cout << "Sorted main chain: ";
@@ -199,10 +218,11 @@ bool PmergeMe::mergePairs(T &elements, T &rest) {
 }
 
 template<typename T>
-void PmergeMe::swapPairs(T &elements) {
+void PmergeMe::swapPairs(T &elements, T &rest) {
 	for (const auto &element: elements) {
 		element->sortElement();
 	}
+	printChains(elements, {}, nullptr, rest);
 }
 
 template<typename T>
