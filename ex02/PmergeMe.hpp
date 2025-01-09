@@ -187,11 +187,11 @@ T PmergeMe::sort(T &elements, T &rest) {
 		}
 
 		// Insert any leftover elements that were not covered by Jacobsthal
-		for (size_t idx = 0; idx < pendingChain.size(); ++idx) {
-			if (!inserted[idx]) {
-				size_t boundaryIdx = getBoundary(mainChainIndices, idx);
-				printInsertion(pendingChain[idx], idx, mainChain[boundaryIdx], boundaryIdx);
-				lastInsertion = sortElementIntoChain(pendingChain[idx], mainChain, mainChain.begin() + boundaryIdx);
+		for (size_t idx = pendingChain.size(); idx > 0; --idx) {
+			if (!inserted[idx - 1]) {
+				size_t boundaryIdx = getBoundary(mainChainIndices, idx-1);
+				printInsertion(pendingChain[idx - 1], idx - 1, mainChain[boundaryIdx], boundaryIdx);
+				lastInsertion = sortElementIntoChain(pendingChain[idx - 1], mainChain, mainChain.begin() + boundaryIdx);
 				mainChainIndices.insert(mainChainIndices.begin() + (lastInsertion - mainChain.begin()), 0);
 			}
 		}
