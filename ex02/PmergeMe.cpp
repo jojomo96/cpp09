@@ -157,3 +157,13 @@ size_t PmergeMe::getBoundary(const std::vector<size_t> &indices, size_t value) {
 	}
 	return -1;
 }
+
+void PmergeMe::printInsertion(const std::shared_ptr<Element>& elem, size_t idx, const std::shared_ptr<Element>& boundaryElem, size_t boundaryIdx, const std::string& prefix) {
+	std::cout << prefix << "Insert elem b" << idx + 2 << " ";
+	elem->print(0);
+	std::cout << "from pend idx(" << idx << ") with boundary ";
+	if (boundaryElem) {
+		boundaryElem->print(0);
+	}
+	std::cout << "idx " << boundaryIdx << std::endl;
+}
