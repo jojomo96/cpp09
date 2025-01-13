@@ -1,4 +1,5 @@
 #pragma once
+#include <deque>
 #include <iostream>
 #include <numeric>
 #include <variant>
@@ -49,8 +50,8 @@ class PmergeMe {
 
 	template<typename T>
 	static std::vector<size_t>::iterator updateMainElementPositions(T &mainChain,
-	                                                                std::vector<size_t> & mainChainPositions,
-	                                                                 typename T::iterator & lastInsertion);
+	                                                                std::vector<size_t> &mainChainPositions,
+	                                                                typename T::iterator &lastInsertion);
 
 	template<typename T>
 	static void handleJacobsthalIndices(T &mainChain, T &pendingChain, std::vector<size_t> mainChainPositions,
@@ -125,7 +126,8 @@ void PmergeMe::run(T &elements) {
 
 template<typename T>
 std::vector<size_t>::iterator PmergeMe::updateMainElementPositions(T &mainChain,
-                                                                   std::vector<size_t> &mainChainPositions, typename T::iterator &lastInsertion) {
+                                                                   std::vector<size_t> &mainChainPositions,
+                                                                   typename T::iterator &lastInsertion) {
 	return mainChainPositions.insert(mainChainPositions.begin() + (lastInsertion - mainChain.begin()), 0);
 }
 

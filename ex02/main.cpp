@@ -10,8 +10,8 @@ std::vector<int> validateAndReturnArgs(int argc, char *argv[]) {
 	for (int i = 1; i < argc; ++i) {
 		std::istringstream iss(argv[i]);
 		int number;
-		if (!(iss >> number) || number <= 0) {
-			std::cerr << "Invalid input: " << argv[i] << " is not a positive integer." << std::endl;
+		if (std::string extra; !(iss >> number) || number < 0 || iss >> extra) {
+			std::cerr << "Invalid input: " << argv[i] << " is not a single positive integer." << std::endl;
 			return {};
 		}
 		result.push_back(number);
@@ -21,7 +21,7 @@ std::vector<int> validateAndReturnArgs(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
 	if (argc == 1) {
-		const std::vector testInput = {11, 2, 17, 0, 16, 8, 6, 15, 10, 3, 21, 1, 18, 9, 14, 19, 12, 5, 4, 20, 13, 7, 0, 7};
+		const std::vector testInput = {11, 2, 17, 0, 16, 8, 6, 15, 10, 3, 21, 1, 18, 9, 14, 19, 12, 5, 4, 20, 13, 7};
 
 		// Run with vector
 		const int run_vector = PmergeMe::runDeque(testInput, true);
@@ -33,8 +33,10 @@ int main(int argc, char *argv[]) {
 	} else {
 		const std::vector<int> input = validateAndReturnArgs(argc, argv);
 		if (!input.empty()) {
-			PmergeMe::runDeque(input);
+			int run_deque = PmergeMe::runDeque(input, true);
 			PmergeMe::runVector(input);
+
+			std::cout << "Global comparison count: " << run_deque << std::endl;
 		}
 	}
 

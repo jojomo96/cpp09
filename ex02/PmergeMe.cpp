@@ -13,12 +13,12 @@ Element::Element(const std::shared_ptr<Element> &first, const std::shared_ptr<El
 	: _data(Pair(first, second)), _depth(depth) {
 }
 
-int Element::getMaxValue() const { // NOLINT(*-no-recursion)
+int Element::getMaxValue() const {// NOLINT(*-no-recursion)
 	if (std::holds_alternative<int>(_data)) {
 		return std::get<int>(_data); // Base Case
 	}
 	const auto &[first, second] = std::get<Pair>(_data);
-	return  second->getMaxValue();
+	return second->getMaxValue();
 }
 
 
@@ -47,13 +47,16 @@ inline int PmergeMe::getGlobalComparisonCount() {
 int PmergeMe::runVector(const std::vector<int> &input, const bool _printDebug) {
 	printDebug = _printDebug;
 	std::vector<std::shared_ptr<Element> > elements;
-	// Add this code where you want to measure the time
+
 	const auto start = std::chrono::high_resolution_clock::now();
 	parseInput(elements, input);
+
 	run(elements);
+
 	const auto end = std::chrono::high_resolution_clock::now();
 	const std::chrono::duration<double, std::micro> elapsed = end - start;
-	std::cout << "Time to process a range of " << elements.size() << " elements with std::vector : " << elapsed.count() << " us" << std::endl;
+	std::cout << "Time to process a range of " << elements.size() << " elements with std::vector : " << elapsed.count()
+			<< " us" << std::endl;
 	return globalComparisonCount;
 }
 
@@ -61,14 +64,12 @@ int PmergeMe::runDeque(const std::vector<int> &input, const bool _printDebug) {
 	printDebug = _printDebug;
 	std::deque<std::shared_ptr<Element> > elements;
 
-
 	parseInput(elements, input);
 
 	std::cout << "Before : ";
 	printAllElements(elements, true);
 	elements.clear();
 
-	// Add this code where you want to measure the time
 	const auto start = std::chrono::high_resolution_clock::now();
 	parseInput(elements, input);
 
@@ -79,7 +80,8 @@ int PmergeMe::runDeque(const std::vector<int> &input, const bool _printDebug) {
 
 	std::cout << "After  : ";
 	printAllElements(elements, true);
-	std::cout << "Time to process a range of " << elements.size() << " elements with std::deque : " << elapsed.count() << " us" << std::endl;
+	std::cout << "Time to process a range of " << elements.size() << " elements with std::deque : " << elapsed.count()
+			<< " us" << std::endl;
 
 	return globalComparisonCount;
 }
@@ -190,7 +192,7 @@ void Element::printSwap(const std::shared_ptr<Element> &first, const std::shared
 	std::cout << std::endl;
 }
 
-void PmergeMe::printOddInsertion(const std::shared_ptr<Element>& odd) {
+void PmergeMe::printOddInsertion(const std::shared_ptr<Element> &odd) {
 	if (printDebug) {
 		std::cout << "O -> Insert elem ";
 		odd->print(0);
