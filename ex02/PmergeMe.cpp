@@ -95,6 +95,14 @@ std::vector<size_t> generateJacobsthalUpTo(const size_t maxN) {
 		}
 	}
 
+	if (printDebug) {
+		std::cout << "Jacobsthal numbers: ";
+		for (const size_t j: result) {
+			std::cout << j << " ";
+		}
+		std::cout << std::endl;
+	}
+
 	return result;
 }
 

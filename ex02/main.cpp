@@ -21,7 +21,7 @@ std::vector<int> validateAndReturnArgs(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
 	if (argc == 1) {
-		const std::vector testInput = {11, 2, 17, 0, 16, 8, 6, 15, 10, 3, 21, 1, 18, 9, 14, 19, 12, 5, 4, 20, 13, 7};
+		const std::vector testInput = {11, 2, 17, 0, 16, 8, 6, 15, 10, 3, 21, 1, 18, 9, 14, 19, 12, 5, 4, 20, 13, 7, 0, 7};
 
 		// Run with vector
 		const int run_vector = PmergeMe::runDeque(testInput, true);
