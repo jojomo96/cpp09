@@ -8,25 +8,34 @@
 
 
 bool BitcoinExchange::isValidDate(const std::string& date) {
-	std::istringstream ss(date);
-	std::tm tm = {};
-	ss >> std::get_time(&tm, "%Y-%m-%d");
-	if (ss.fail()) {
+	static const std::regex datePattern(R"((\d{4})-(\d{2})-(\d{2}))");
+	std::smatch match;
+	if (!std::regex_match(date, match, datePattern)) {
 		return false;
 	}
 
-	// Check if the date is valid
-	std::chrono::system_clock::time_point tp;
-	try {
-		tp = std::chrono::system_clock::from_time_t(std::mktime(&tm));
-	} catch (...) {
+	const int year = std::stoi(match[1].str());
+	const int month = std::stoi(match[2].str());
+	const int day = std::stoi(match[3].str());
+
+	if (month < 1 || month > 12) {
 		return false;
 	}
 
-	// Check if the parsed date matches the input date
-	std::ostringstream oss;
-	oss << std::put_time(&tm, "%Y-%m-%d");
-	return date == oss.str();
+	static const int daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+	int days = daysInMonth[month - 1];
+
+	// Check for leap year
+	if (month == 2 && ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0))) {
+		days = 29;
+	}
+
+	if (day < 1 || day > days) {
+		return false;
+	}
+
+	return true;
 }
 
 bool BitcoinExchange::isValidExchangeRate(const std::string& rate) {
@@ -37,13 +46,11 @@ bool BitcoinExchange::isValidExchangeRate(const std::string& rate) {
 std::map<std::string, double> BitcoinExchange::_parseExchangeRates() {
 	std::ifstream exchangeRates(EXCHANGE_RATES_FILE);
 	if (!exchangeRates) {
-		std::cerr << "Error: Could not open file " << EXCHANGE_RATES_FILE << std::endl;
-		return {};
+		throw std::runtime_error("Error: Could not open file " + std::string(EXCHANGE_RATES_FILE));
 	}
 
 	if (exchangeRates.peek() == std::ifstream::traits_type::eof()) {
-		std::cerr << "Error: File " << EXCHANGE_RATES_FILE << " is empty" << std::endl;
-		return {};
+		throw std::runtime_error("Error: File " + std::string(EXCHANGE_RATES_FILE) + " is empty");
 	}
 
 	std::map<std::string, double> data;
@@ -51,8 +58,7 @@ std::map<std::string, double> BitcoinExchange::_parseExchangeRates() {
 	std::getline(exchangeRates, line);
 
 	if (line != EXCHANGE_RATES_FILE_HEADER) {
-		std::cerr << "Error: Invalid header in file " << EXCHANGE_RATES_FILE << std::endl;
-		return {};
+		throw std::runtime_error("Error: Invalid header in file " + std::string(EXCHANGE_RATES_FILE));
 	}
 
 	while (std::getline(exchangeRates, line)) {
@@ -67,7 +73,7 @@ std::map<std::string, double> BitcoinExchange::_parseExchangeRates() {
 		}
 
 		double rate = std::stod(rateStr);
-		if (data.find(date) != data.end()) {
+		if (data.contains(date)) {
 			throw std::runtime_error("Error: Duplicate date found");
 		}
 
