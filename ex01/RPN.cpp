@@ -50,7 +50,7 @@ int RPN::evaluate(const std::string &expression) {
 		else
 		{
 			// Any invalid token (including parentheses) => error
-			throw std::runtime_error("Error: invalid token");
+			throw std::runtime_error("Error: invalid token: " + token);
 		}
 	}
 
