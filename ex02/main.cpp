@@ -33,10 +33,8 @@ int main(int argc, char *argv[]) {
 	} else {
 		const std::vector<int> input = validateAndReturnArgs(argc, argv);
 		if (!input.empty()) {
-			int run_deque = PmergeMe::runDeque(input, true);
+			PmergeMe::runDeque(input);
 			PmergeMe::runVector(input);
-
-			std::cout << "Global comparison count: " << run_deque << std::endl;
 		}
 	}
 
