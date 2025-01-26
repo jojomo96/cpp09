@@ -73,7 +73,7 @@ std::map<std::string, double> BitcoinExchange::_parseExchangeRates() {
 		}
 
 		double rate = std::stod(rateStr);
-		if (data.contains(date)) {
+		if (data.find(date) != data.end()) {
 			throw std::runtime_error("Error: Duplicate date found");
 		}
 
